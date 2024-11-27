@@ -116,7 +116,20 @@ R = [r1,r2,r3];
 
 trans_h = [R, t];
 
-P = k*trans_h
+P = k*trans_h;
 
+%% Test de la fonction P 
+
+mreel = [0;0;1]*21; %[mm]
+mpxl = P * [mreel;1];
+
+mpxl = mpxl/mpxl(end)
+
+figure(3);
+imshow(img); % Display the image
+hold on;
+
+% Tracer le carré
+plot(mpxl(1), mpxl(2),'bo'); % '-o' pour les lignes avec marqueurs
 
 
