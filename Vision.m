@@ -1,5 +1,9 @@
 %% Calibration et calcul de la matrice H 
 
+
+%focale 0.6
+
+
 %Mesurre des coordonnées des points en pixels et en mm
 
 p1 = [0 0;0 5;8 0;8 5;1 4;3 2;5 4;7 1;3 5;3 0]*21; % [mm]
@@ -18,8 +22,11 @@ for i = 1:n
     xp = p2(i,1);
     yp = p2(i,2);
 
-    A(2*i-1,:) = [0 0 0 -x -y -1 x*yp y*yp yp];
-    A(2*i,:) = [x y 1 0 0 0 -x*xp -y*xp -xp];
+    %A(2*i-1,:) = [0 0 0 -x -y -1 x*yp y*yp yp];
+    %A(2*i,:) = [x y 1 0 0 0 -x*xp -y*xp -xp];
+
+    A(2*i,:) = [0 0 0 x y 1 -x*yp -y*yp -yp];
+    A(2*i-1,:) = [x y 1 0 0 0 -x*xp -y*xp -xp];
     
 end
 
@@ -97,39 +104,120 @@ title('Carré à partir des coordonnées des extrémités');
 
 %% Calcul de la mattrice H 
 
-k = [1.1546e3, 0, 0.5945e3; 0, 1.1537e3, 0.8078; 0, 0, 0.0010e3];
+k = [1.1546e3  , 0 ,     0.5945e3; 
+      0    , 1.1537e3  , 0.8078e3;
+      0    ,     0     , 0.0010e3];
 
 kinv = inv(k);
 
-RT = kinv * H;
+Hn=H/H(end,end);
+
+RT = kinv * Hn;
 
 r1 = RT(:,1);
 r2 = RT(:,2);
 t= RT(:,3);
-
-r1 = r1/norm(r1);
-r2 = r2/norm(r2);
-
 r3 = cross(r1,r2);
 
 R = [r1,r2,r3];
 
-trans_h = [R, t];
+alpha = nthroot(det(R),4);
 
-P = k*trans_h;
+r1 = r1/alpha;
+r2 = r2/alpha;
+t=t/alpha;
+r3=r3/alpha^2;
+
+R = [r1,r2,r3];
+
+%On doit verifier la rotation et la translation positif ou négative 
+Rn =[-R(:,1),-R(:,2), R(:,3)];
+tn=-t
+trans_h = [Rn, tn];
+
+P = alpha*k*trans_h;
 
 %% Test de la fonction P 
 
-mreel = [0;0;1]*21; %[mm]
-mpxl = P * [mreel;1];
+mreel1 = [1;1;2]*21; %[mm]
+mreel2 = [1;1;0]*21;
 
-mpxl = mpxl/mpxl(end)
+mpxl1 = P * [mreel1;1];
+mpxl2 = P * [mreel2;1];
 
-figure(3);
-imshow(img); % Display the image
-hold on;
+mpxl1 = mpxl1/mpxl1(end);
+mpxl2 = mpxl2/mpxl2(end);
+
+%figure(3);
+
+% imshow(img); % Display the image
+%hold on;
 
 % Tracer le carré
-plot(mpxl(1), mpxl(2),'bo'); % '-o' pour les lignes avec marqueurs
+%plot(mpxl1(1), mpxl1(2),'bo'); % '-o' pour les lignes avec marqueurs
+%plot(mpxl2(1), mpxl2(2),'bo'); % '-o' pour les lignes avec marqueurs
+
+
+% Définir les sommets du cube dans le repère réel (en mm)
+cube_real = [
+    0, 0, 0;  % S1
+    0, 0, 5; % S2
+    5, 0, 0; % S3
+    5, 0, 5; % S4
+    0, 5, 0; % S5
+    0, 5, 5; % S6
+    5, 5, 0; % S7
+    5, 5, 5; % S8
+] * 21; % Échelle en mm (exemple)
+
+% Ajouter la coordonnée homogène (1) à chaque sommet
+cube_real_h = [cube_real, ones(size(cube_real, 1), 1)];
+
+% Projeter les sommets dans le repère pixels
+cube_pixel_h = (P * cube_real_h')'; % Projeter avec la matrice P
+cube_pixel_h = cube_pixel_h ./ cube_pixel_h(:, 3); % Normaliser (diviser par la 3e coordonnée)
+
+% Extraire les coordonnées X et Y en pixels
+cube_pixel = cube_pixel_h(:, 1:2);
+
+% Définir les arêtes du cube (indices des sommets à relier)
+edges = [
+    1, 2; 1, 3; 1, 5; % Arêtes depuis S1
+    2, 4; 2, 6;       % Arêtes depuis S2
+    3, 4; 3, 7;       % Arêtes depuis S3
+    4, 8;             % Arête depuis S4
+    5, 6; 5, 7;       % Arêtes depuis S5
+    6, 8;             % Arête depuis S6
+    7, 8;             % Arête depuis S7
+];
+
+% Affichage de l'image et du cube
+figure;
+imshow(img);
+hold on;
+
+% Tracer les arêtes du cube
+for i = 1:size(edges, 1)
+    % Récupérer les indices des sommets
+    idx1 = edges(i, 1);
+    idx2 = edges(i, 2);
+    
+    % Récupérer les coordonnées des deux sommets
+    pt1 = cube_pixel(idx1, :);
+    pt2 = cube_pixel(idx2, :);
+    
+    % Tracer une ligne entre les deux sommets
+    plot([pt1(1), pt2(1)], [pt1(2), pt2(2)], 'r-', 'LineWidth', 2);
+end
+
+% Afficher les sommets du cube
+plot(cube_pixel(:, 1), cube_pixel(:, 2), 'bo', 'MarkerSize', 8, 'MarkerFaceColor', 'b');
+
+hold off;
+
+
+
+
+%Blinder communiity
 
 
