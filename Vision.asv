@@ -107,28 +107,14 @@ ki = inv(k);
 
 RT = ki * Hn;
 
-
 r1 = RT(:,1);
 r2 = RT(:,2);
-
-n1 = norm(r1);
-n2 = norm(r2);
-
-r1=r1/n1;
-r2=r2/n2;
-
 t = RT(:,3);
-
 r3 = cross(r1, r2);
 
-R = [r1,r2,r3];
+trans_h = [r1, r2, r3, t];
 
-trans_h = [R, t];
-
-P=k*trans_h;
-
-%% Test de la fonction P 
-
+P=k*trans_h
 
 
 
