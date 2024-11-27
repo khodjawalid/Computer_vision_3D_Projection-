@@ -95,3 +95,28 @@ hold on;
 plot(xcarpix, ycarpix,'-o' ,'LineWidth', 2, 'MarkerSize', 8); % '-o' pour les lignes avec marqueurs
 title('Carré à partir des coordonnées des extrémités');
 
+%% Calcul de la mattrice H 
+
+k = [1.1546e3, 0, 0.5945e3; 0, 1.1537e3, 0.8078; 0, 0, 0.0010e3];
+
+kinv = inv(k);
+
+RT = kinv * H;
+
+r1 = RT(:,1);
+r2 = RT(:,2);
+t= RT(:,3);
+
+r1 = r1/norm(r1);
+r2 = r2/norm(r2);
+
+r3 = cross(r1,r2);
+
+R = [r1,r2,r3];
+
+trans_h = [R, t];
+
+P = k*trans_h
+
+
+
