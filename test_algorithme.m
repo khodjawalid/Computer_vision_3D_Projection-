@@ -1,6 +1,6 @@
 %% test
 %Téléchargement de l'image 
-I = imread(sprintf('xxxx.jpg'));
+I = imread(sprintf('Frames3/img1.jpg'));
 % Convertir en espace HSV
 hsvImage = rgb2hsv(I);
 
@@ -12,7 +12,7 @@ value = hsvImage(:,:,3);      % Valeur
 % Définir les seuils pour détecter le bleu (ajuster si nécessaire)
 hueThresholdLow = 0.55; % Borne basse de la teinte
 hueThresholdHigh = 0.75; % Borne haute de la teinte
-saturationThreshold = 0.3; % Seuil minimum pour la saturation
+saturationThreshold = 0.2; % Seuil minimum pour la saturation
 valueThreshold = 0.2; % Seuil minimum pour la luminosité
 
 % Créer un masque binaire pour les pixels bleus
@@ -67,8 +67,8 @@ c
 
 %Mesurre des coordonnées des points en pixels et en mm
 
-p1 = [0 0; 0 10; 0 5; 5 0; 5 10; 10 0; 10 10; 10 5]*10; % [mm]10
-p2 = c;
+p1 = [0 10; 0 5; 5 10; 10 10; 0 0; 10 5; 5 0; 10 0]*10; % [mm]10
+p2 = c
 
 %Extractionn du nombre de points
 n = size(p1,1);
