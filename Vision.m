@@ -102,7 +102,7 @@ hold on;
 plot(xcarpix, ycarpix,'-o' ,'LineWidth', 2, 'MarkerSize', 8); % '-o' pour les lignes avec marqueurs
 title('Carré à partir des coordonnées des extrémités');
 
-%% Calcul de la mattrice H 
+%% Calcul de la mattrice P 
 
 k = [1.1546e3  , 0 ,     0.5945e3; 
       0    , 1.1537e3  , 0.8078e3;
