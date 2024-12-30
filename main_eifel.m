@@ -122,34 +122,16 @@ for i=20:48
     [U,S,V] = svd(A);
     h = V(:,end);
     H = reshape(h,[3 3])';
- 
-    %close all;
-    % figure; % Create a new figure window
-    % imshow(I); % Display the image
-    % hold on;
-
-    xpt1=zeros(n,3);
-    for j = 1:n
-        xpt1(j,:) = H*[p1(j,:) 1]'*21;
-        xpt1(j,:) = xpt1(j,:)/xpt1(j,3);
-    end
-
-    x = xpt1(:, 1); % Extraire les coordonnées X
-    y = xpt1(:, 2); % Extraire les coordonnées Y
-
-    % plot(x, y, 'ro'); % 'b' pour bleu et 'o' pour des marqueurs circulaires
-    % xlabel('X');
-    % ylabel('Y');
-    % title("Affichage de l'image avec les points respectifs");
-    % pause(0.5)
-
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Calcul de la mattrice P 
-
+    % Calcul de la mattrice P en 3d
+    
+    %Matrice intinsèque 
     k = [1.1546e3  , 0 ,     0.5945e3; 
           0    , 1.1537e3  , 0.8078e3;
           0    ,     0     , 0.0010e3];
+
+    %Calcul de RT 
     kinv = inv(k);
     Hn=H/H(end,end);
     RT = kinv * Hn;
@@ -159,9 +141,12 @@ for i=20:48
     r2 = RT(:,2);
     t= RT(:,3);
     r3 = cross(r1,r2);
-    R = [r1,r2,r3];    
-    alpha = nthroot(det(R),4);
+    R = [r1,r2,r3];
 
+    %Coefficient de normalisation 
+    alpha = nthroot(det(R),4);
+    
+    %Normalisation
     r1 = r1/alpha;
     r2 = r2/alpha;
     t=t/alpha;
@@ -172,44 +157,48 @@ for i=20:48
     Rn =[-R(:,1),-R(:,2), -R(:,3)];
     tn=-t;
     
+    %Nouvelle matrice de transformation homogène 
     trans_h = [Rn, tn];
     
     % Construire la matrice de projection
-    P = alpha*k*trans_h;
-
-    % Test de la fonction P 
+    P = alpha*k*trans_h; 
     
-   
-    % Définir les sommets du cube dans le repère réel (en mm)
-
-    
-  
-    cube_real = vertices*80 ; % Échelle en mm (exemple)
-    cube_real(:, 1:2) =cube_real(:, 1:2) +50;
+    eiffel = vertices*80 ; % Échelle en mm 
+    eiffel(:, 1:2) =eiffel(:, 1:2) +50; %Centrer la tour eiffel au milieu 
     
     % Ajouter la coordonnée homogène (1) à chaque sommet
-    cube_real_h = [cube_real, ones(size(cube_real, 1), 1)];
+    eiffel_h = [eiffel, ones(size(eiffel, 1), 1)];
     
+    % Calculer les couleurs basées sur la valeur de x en coordonnées réelles
+    % Calculer les couleurs basées sur la valeur de y en coordonnées réelles
+    colors = zeros(size(eiffel, 1), 3); % Initialiser une matrice pour les couleurs
+    for i = 1:size(eiffel, 1)
+        if eiffel(i, 2) < 40
+            colors(i, :) = [0, 0, 1]; % Bleu
+        elseif eiffel(i, 2) < 65
+            colors(i, :) = [1, 1, 1]; % Blanc
+        else
+            colors(i, :) = [1, 0, 0]; % Rouge
+        end
+    end
+
     % Projeter les sommets dans le repère pixels
-    cube_pixel_h = (P * cube_real_h')'; % Projeter avec la matrice P
-    cube_pixel_h = cube_pixel_h ./ cube_pixel_h(:, 3); % Normaliser (diviser par la 3e coordonnée)
+    eiffel_pixel_h = (P * eiffel_h')'; % Projeter avec la matrice P
+    eiffel_pixel_h = eiffel_pixel_h ./ eiffel_pixel_h(:, 3); % Normaliser (diviser par la 3e coordonnée)
     
     % Extraire les coordonnées X et Y en pixels
-    cube_pixel = cube_pixel_h(:, 1:2);
+    eiffel_pixel = eiffel_pixel_h(:, 1:2);
     
     % Affichage de l'image et du cube
     imshow(I);
     hold on;
     
     % Afficher les sommets du cube
-    plot(cube_pixel(:, 1), cube_pixel(:, 2), 'o', 'MarkerSize', 2.5, 'MarkerFaceColor', 'r', 'MarkerEdgeColor', 'r');
+    scatter(eiffel_pixel(:, 1), eiffel_pixel(:, 2), 5, colors, 'filled');
     
     hold off;
     
     pause(1/40)
-    
-    
-
 end
 
 
